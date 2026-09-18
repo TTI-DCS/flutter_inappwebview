@@ -609,6 +609,32 @@ namespace flutter_inappwebview_plugin
       }
     ).Get(), nullptr));
 
+    // WSF patch: WebView2レンダラープロセスのクラッシュ/ハング検知。
+    // ICoreWebView2::add_ProcessFailedは元々このプラグインでは未配線
+    // だった（Dart側のonRenderProcessGoneはAndroid向けにのみ実装済み）。
+    // reasonがUNRESPONSIVE（ハング、プロセスは生存中）の場合はdidCrash=false、
+    // それ以外（CRASHED/TERMINATED/OUT_OF_MEMORY等、プロセスが消滅した場合）は
+    // didCrash=trueとする。ICoreWebView2ProcessFailedEventArgs2はSDK
+    // 1.0.1210.39以降で利用可能（本プラグインは1.0.2792.45を使用）。
+    failedLog(webView->add_ProcessFailed(
+      Callback<ICoreWebView2ProcessFailedEventHandler>(
+        [this](ICoreWebView2* sender, ICoreWebView2ProcessFailedEventArgs* args)
+        {
+          if (channelDelegate) {
+            bool didCrash = true;
+            wil::com_ptr<ICoreWebView2ProcessFailedEventArgs2> args2;
+            if (SUCCEEDED(args->QueryInterface(IID_PPV_ARGS(&args2)))) {
+              COREWEBVIEW2_PROCESS_FAILED_REASON reason = COREWEBVIEW2_PROCESS_FAILED_REASON_UNEXPECTED;
+              if (SUCCEEDED(args2->get_Reason(&reason))) {
+                didCrash = reason != COREWEBVIEW2_PROCESS_FAILED_REASON_UNRESPONSIVE;
+              }
+            }
+            channelDelegate->onRenderProcessGone(didCrash);
+          }
+          return S_OK;
+        }
+      ).Get(), nullptr));
+
     failedLog(webView->add_WebMessageReceived(Callback<ICoreWebView2WebMessageReceivedEventHandler>(
       [this](ICoreWebView2* sender, ICoreWebView2WebMessageReceivedEventArgs* args)
       {

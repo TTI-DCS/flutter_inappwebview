@@ -429,6 +429,24 @@ namespace flutter_inappwebview_plugin
     channel->InvokeMethod("onProgressChanged", std::move(arguments));
   }
 
+  // WSF patch: WebView2レンダラープロセスのクラッシュ/ハング通知
+  // (ICoreWebView2::add_ProcessFailed経由)。Android実装と同じチャンネル名
+  // ("onRenderProcessGone")・同じマップ形状(didCrash)に合わせることで、
+  // Dart側の既存PlatformWebViewCreationParams.onRenderProcessGoneに
+  // そのまま配線される。rendererPriorityAtExitはAndroid固有の概念のため
+  // WindowsではキーごとNull(未設定)のまま送る。
+  void WebViewChannelDelegate::onRenderProcessGone(const bool& didCrash) const
+  {
+    if (!channel) {
+      return;
+    }
+
+    auto arguments = std::make_unique<flutter::EncodableValue>(flutter::EncodableMap{
+      {"didCrash", didCrash}
+      });
+    channel->InvokeMethod("onRenderProcessGone", std::move(arguments));
+  }
+
   void WebViewChannelDelegate::onCreateWindow(std::shared_ptr<CreateWindowAction> createWindowAction, std::unique_ptr<CreateWindowCallback> callback) const
   {
     if (!channel) {

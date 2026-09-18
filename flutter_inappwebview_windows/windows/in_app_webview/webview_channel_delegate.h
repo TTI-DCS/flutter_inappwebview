@@ -85,6 +85,10 @@ namespace flutter_inappwebview_plugin
     void onPermissionRequest(const std::string& origin, const std::vector<int64_t>& resources, std::unique_ptr<PermissionRequestCallback> callback) const;
     void shouldInterceptRequest(std::shared_ptr<WebResourceRequest> request, std::unique_ptr<ShouldInterceptRequestCallback> callback) const;
     void onLoadResourceWithCustomScheme(std::shared_ptr<WebResourceRequest> request, std::unique_ptr<LoadResourceWithCustomSchemeCallback> callback) const;
+    // WSF patch: WebView2レンダラープロセスのクラッシュ/ハング検知
+    // (ICoreWebView2::add_ProcessFailed)をDart側の既存onRenderProcessGone
+    // チャンネル（Android向けに元々実装済み）に配線する。
+    void onRenderProcessGone(const bool& didCrash) const;
   };
 }
 
