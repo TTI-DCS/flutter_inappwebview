@@ -207,7 +207,16 @@ namespace flutter_inappwebview_plugin
 
     wil::com_ptr<ICoreWebView2Controller2> webViewController2;
     if (succeededOrLog(webViewController->QueryInterface(IID_PPV_ARGS(&webViewController2)))) {
-      if (!settings->transparentBackground) {
+      // NOTE (WSF fork): this condition was inverted upstream. `transparentBackground`
+      // being *true* is what should make the WebView2 control transparent
+      // (alpha=0); the settings-update path below (`updateSettings`) already
+      // computes `alpha = transparentBackground ? 0 : 255` correctly, so this
+      // initial-creation path is made consistent with it. As shipped upstream,
+      // requesting a transparent background at creation time had no effect
+      // (WebView2 kept its default opaque white background until a later
+      // settings update flipped it), which shows up as a white flash before
+      // the page's own CSS paints.
+      if (settings->transparentBackground) {
         webViewController2->put_DefaultBackgroundColor({ 0, 255, 255, 255 });
       }
     }
