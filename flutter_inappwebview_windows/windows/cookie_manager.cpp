@@ -6,6 +6,7 @@
 
 #include "cookie_manager.h"
 #include "types/callbacks_complete.h"
+#include "utils/callback.h"
 #include "utils/flutter.h"
 #include "utils/log.h"
 
@@ -144,7 +145,7 @@ namespace flutter_inappwebview_plugin
       parameters["sameSite"] = sameSite.value();
     }
 
-    auto hr = webViewEnvironment->getWebView()->CallDevToolsProtocolMethod(L"Network.setCookie", utf8_to_wide(parameters.dump()).c_str(), Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+    auto hr = webViewEnvironment->getWebView()->CallDevToolsProtocolMethod(L"Network.setCookie", utf8_to_wide(parameters.dump()).c_str(), SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
       [completionHandler](HRESULT errorCode, LPCWSTR returnObjectAsJson)
       {
         if (completionHandler) {
@@ -172,7 +173,7 @@ namespace flutter_inappwebview_plugin
       {"urls", std::vector<std::string>{url}}
     };
 
-    auto hr = webViewEnvironment->getWebView()->CallDevToolsProtocolMethod(L"Network.getCookies", utf8_to_wide(parameters.dump()).c_str(), Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+    auto hr = webViewEnvironment->getWebView()->CallDevToolsProtocolMethod(L"Network.getCookies", utf8_to_wide(parameters.dump()).c_str(), SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
       [completionHandler, name](HRESULT errorCode, LPCWSTR returnObjectAsJson)
       {
         if (succeededOrLog(errorCode)) {
@@ -221,7 +222,7 @@ namespace flutter_inappwebview_plugin
       {"urls", std::vector<std::string>{url}}
     };
 
-    auto hr = webViewEnvironment->getWebView()->CallDevToolsProtocolMethod(L"Network.getCookies", utf8_to_wide(parameters.dump()).c_str(), Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+    auto hr = webViewEnvironment->getWebView()->CallDevToolsProtocolMethod(L"Network.getCookies", utf8_to_wide(parameters.dump()).c_str(), SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
       [completionHandler](HRESULT errorCode, LPCWSTR returnObjectAsJson)
       {
         std::vector<flutter::EncodableValue> cookies = {};
@@ -272,7 +273,7 @@ namespace flutter_inappwebview_plugin
       parameters["domain"] = domain.value();
     }
 
-    auto hr = webViewEnvironment->getWebView()->CallDevToolsProtocolMethod(L"Network.deleteCookies", utf8_to_wide(parameters.dump()).c_str(), Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+    auto hr = webViewEnvironment->getWebView()->CallDevToolsProtocolMethod(L"Network.deleteCookies", utf8_to_wide(parameters.dump()).c_str(), SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
       [completionHandler](HRESULT errorCode, LPCWSTR returnObjectAsJson)
       {
         if (completionHandler) {
@@ -326,7 +327,7 @@ namespace flutter_inappwebview_plugin
       return;
     }
 
-    auto hr = webViewEnvironment->getWebView()->CallDevToolsProtocolMethod(L"Network.clearBrowserCookies", L"{}", Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+    auto hr = webViewEnvironment->getWebView()->CallDevToolsProtocolMethod(L"Network.clearBrowserCookies", L"{}", SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
       [completionHandler](HRESULT errorCode, LPCWSTR returnObjectAsJson)
       {
         if (completionHandler) {

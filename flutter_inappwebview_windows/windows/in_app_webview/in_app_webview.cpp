@@ -10,6 +10,7 @@
 #include "../types/web_resource_error.h"
 #include "../types/web_resource_request.h"
 #include "../utils/base64.h"
+#include "../utils/callback.h"
 #include "../utils/log.h"
 #include "../utils/map.h"
 #include "../utils/strconv.h"
@@ -82,7 +83,7 @@ namespace flutter_inappwebview_plugin
         }
         if (willBeSurface && (webViewEnv10 || webViewEnv3)) {
           if (webViewEnv10 && options) {
-            failedLog(webViewEnv10->CreateCoreWebView2CompositionControllerWithOptions(parentWindow, options.get(), Callback<ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandler>(
+            failedLog(webViewEnv10->CreateCoreWebView2CompositionControllerWithOptions(parentWindow, options.get(), SafeCallback<ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandler>(
               [completionHandler, env](HRESULT result, wil::com_ptr<ICoreWebView2CompositionController> compositionController) -> HRESULT
               {
                 wil::com_ptr<ICoreWebView2Controller3> webViewController = compositionController.try_query<ICoreWebView2Controller3>();
@@ -105,7 +106,7 @@ namespace flutter_inappwebview_plugin
             ).Get()));
           }
           else {
-            failedLog(webViewEnv3->CreateCoreWebView2CompositionController(parentWindow, Callback<ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandler>(
+            failedLog(webViewEnv3->CreateCoreWebView2CompositionController(parentWindow, SafeCallback<ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandler>(
               [completionHandler, env](HRESULT result, wil::com_ptr<ICoreWebView2CompositionController> compositionController) -> HRESULT
               {
                 wil::com_ptr<ICoreWebView2Controller3> webViewController = compositionController.try_query<ICoreWebView2Controller3>();
@@ -130,7 +131,7 @@ namespace flutter_inappwebview_plugin
         }
         else {
           if (webViewEnv10 && options) {
-            failedLog(webViewEnv10->CreateCoreWebView2ControllerWithOptions(parentWindow, options.get(), Callback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(
+            failedLog(webViewEnv10->CreateCoreWebView2ControllerWithOptions(parentWindow, options.get(), SafeCallback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(
               [completionHandler, env](HRESULT result, wil::com_ptr<ICoreWebView2Controller> controller) -> HRESULT
               {
                 if (failedAndLog(result) || !controller) {
@@ -143,7 +144,7 @@ namespace flutter_inappwebview_plugin
               }).Get()));
           }
           else {
-            failedLog(env->CreateCoreWebView2Controller(parentWindow, Callback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(
+            failedLog(env->CreateCoreWebView2Controller(parentWindow, SafeCallback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(
               [completionHandler, env](HRESULT result, wil::com_ptr<ICoreWebView2Controller> controller) -> HRESULT
               {
                 if (failedAndLog(result) || !controller) {
@@ -166,7 +167,7 @@ namespace flutter_inappwebview_plugin
     else {
       hr = CreateCoreWebView2EnvironmentWithOptions(
         nullptr, nullptr, nullptr,
-        Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(callback).Get());
+        SafeCallback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(callback).Get());
     }
 
     if (failedAndLog(hr)) {
@@ -222,7 +223,7 @@ namespace flutter_inappwebview_plugin
     }
 
     // required to make Runtime events work
-    failedLog(webView->CallDevToolsProtocolMethod(L"Runtime.enable", L"{}", Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+    failedLog(webView->CallDevToolsProtocolMethod(L"Runtime.enable", L"{}", SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
       [this](HRESULT errorCode, LPCWSTR returnObjectAsJson)
       {
         failedLog(errorCode);
@@ -231,7 +232,7 @@ namespace flutter_inappwebview_plugin
     ).Get()));
 
     // required to make Page events work and to add User Scripts
-    failedLog(webView->CallDevToolsProtocolMethod(L"Page.enable", L"{}", Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+    failedLog(webView->CallDevToolsProtocolMethod(L"Page.enable", L"{}", SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
       [this](HRESULT errorCode, LPCWSTR returnObjectAsJson)
       {
         failedLog(errorCode);
@@ -240,7 +241,7 @@ namespace flutter_inappwebview_plugin
     ).Get()));
 
     // required to use Network domain
-    failedLog(webView->CallDevToolsProtocolMethod(L"Network.enable", L"{}", Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+    failedLog(webView->CallDevToolsProtocolMethod(L"Network.enable", L"{}", SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
       [this](HRESULT errorCode, LPCWSTR returnObjectAsJson)
       {
         failedLog(errorCode);
@@ -249,7 +250,7 @@ namespace flutter_inappwebview_plugin
     ).Get()));
 
     // required to use Fetch domain and implement the shouldOverrideUrlLoading event correctly
-    failedLog(webView->CallDevToolsProtocolMethod(L"Fetch.enable", L"{\"patterns\": [{\"resourceType\": \"Document\", \"requestStage\": \"Request\"}]}", Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+    failedLog(webView->CallDevToolsProtocolMethod(L"Fetch.enable", L"{\"patterns\": [{\"resourceType\": \"Document\", \"requestStage\": \"Request\"}]}", SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
       [this](HRESULT errorCode, LPCWSTR returnObjectAsJson)
       {
         failedLog(errorCode);
@@ -257,7 +258,7 @@ namespace flutter_inappwebview_plugin
       }
     ).Get()));
 
-    failedLog(webView->CallDevToolsProtocolMethod(L"Page.getFrameTree", L"{}", Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+    failedLog(webView->CallDevToolsProtocolMethod(L"Page.getFrameTree", L"{}", SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
       [this](HRESULT errorCode, LPCWSTR returnObjectAsJson)
       {
         if (succeededOrLog(errorCode)) {
@@ -288,7 +289,7 @@ namespace flutter_inappwebview_plugin
 
     if (succeededOrLog(webView->GetDevToolsProtocolEventReceiver(L"Fetch.requestPaused", &fetchRequestPausedEventReceiver))) {
       failedAndLog(fetchRequestPausedEventReceiver->add_DevToolsProtocolEventReceived(
-        Callback<ICoreWebView2DevToolsProtocolEventReceivedEventHandler>(
+        SafeCallback<ICoreWebView2DevToolsProtocolEventReceivedEventHandler>(
           [this](
             ICoreWebView2* sender,
             ICoreWebView2DevToolsProtocolEventReceivedEventArgs* args) -> HRESULT
@@ -314,7 +315,7 @@ namespace flutter_inappwebview_plugin
                 {
                   failedAndLog(webView->CallDevToolsProtocolMethod(L"Fetch.continueRequest",
                     utf8_to_wide("{\"requestId\":\"" + requestId + "\"}").c_str(),
-                    Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+                    SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
                       [this](HRESULT errorCode, LPCWSTR returnObjectAsJson)
                       {
                         failedLog(errorCode);
@@ -334,7 +335,7 @@ namespace flutter_inappwebview_plugin
                 {
                   failedAndLog(webView->CallDevToolsProtocolMethod(L"Fetch.failRequest",
                     utf8_to_wide("{\"requestId\":\"" + requestId + "\", \"errorReason\": \"Aborted\"}").c_str(),
-                    Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+                    SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
                       [this](HRESULT errorCode, LPCWSTR returnObjectAsJson)
                       {
                         failedLog(errorCode);
@@ -425,7 +426,7 @@ namespace flutter_inappwebview_plugin
     }
 
     failedLog(webView->add_NavigationStarting(
-      Callback<ICoreWebView2NavigationStartingEventHandler>(
+      SafeCallback<ICoreWebView2NavigationStartingEventHandler>(
         [this](ICoreWebView2* sender, ICoreWebView2NavigationStartingEventArgs* args)
         {
           isLoading_ = true;
@@ -527,7 +528,7 @@ namespace flutter_inappwebview_plugin
       ).Get(), nullptr));
 
     failedLog(webView->add_ContentLoading(
-      Callback<ICoreWebView2ContentLoadingEventHandler>(
+      SafeCallback<ICoreWebView2ContentLoadingEventHandler>(
         [this](ICoreWebView2* sender, ICoreWebView2ContentLoadingEventArgs* args)
         {
           if (channelDelegate) {
@@ -538,7 +539,7 @@ namespace flutter_inappwebview_plugin
       ).Get(), nullptr));
 
     failedLog(webView->add_NavigationCompleted(
-      Callback<ICoreWebView2NavigationCompletedEventHandler>(
+      SafeCallback<ICoreWebView2NavigationCompletedEventHandler>(
         [this](ICoreWebView2* sender, ICoreWebView2NavigationCompletedEventArgs* args)
         {
           isLoading_ = false;
@@ -592,7 +593,7 @@ namespace flutter_inappwebview_plugin
         }
       ).Get(), nullptr));
 
-    failedLog(webView->add_DocumentTitleChanged(Callback<ICoreWebView2DocumentTitleChangedEventHandler>(
+    failedLog(webView->add_DocumentTitleChanged(SafeCallback<ICoreWebView2DocumentTitleChangedEventHandler>(
       [this](ICoreWebView2* sender, IUnknown* args)
       {
         if (channelDelegate) {
@@ -604,7 +605,7 @@ namespace flutter_inappwebview_plugin
       }
     ).Get(), nullptr));
 
-    failedLog(webView->add_HistoryChanged(Callback<ICoreWebView2HistoryChangedEventHandler>(
+    failedLog(webView->add_HistoryChanged(SafeCallback<ICoreWebView2HistoryChangedEventHandler>(
       [this](ICoreWebView2* sender, IUnknown* args)
       {
         if (channelDelegate) {
@@ -626,7 +627,7 @@ namespace flutter_inappwebview_plugin
     // didCrash=trueとする。ICoreWebView2ProcessFailedEventArgs2はSDK
     // 1.0.1210.39以降で利用可能（本プラグインは1.0.2792.45を使用）。
     failedLog(webView->add_ProcessFailed(
-      Callback<ICoreWebView2ProcessFailedEventHandler>(
+      SafeCallback<ICoreWebView2ProcessFailedEventHandler>(
         [this](ICoreWebView2* sender, ICoreWebView2ProcessFailedEventArgs* args)
         {
           if (channelDelegate) {
@@ -644,7 +645,7 @@ namespace flutter_inappwebview_plugin
         }
       ).Get(), nullptr));
 
-    failedLog(webView->add_WebMessageReceived(Callback<ICoreWebView2WebMessageReceivedEventHandler>(
+    failedLog(webView->add_WebMessageReceived(SafeCallback<ICoreWebView2WebMessageReceivedEventHandler>(
       [this](ICoreWebView2* sender, ICoreWebView2WebMessageReceivedEventArgs* args)
       {
         if (!channelDelegate) {
@@ -661,8 +662,10 @@ namespace flutter_inappwebview_plugin
 
             if (name.compare("callHandler") == 0 && body.contains("handlerName") && body.at("handlerName").is_string()) {
               auto handlerName = body.at("handlerName").get<std::string>();
-              auto callHandlerID = body.at("_callHandlerID").is_number_integer() ? body.at("_callHandlerID").get<int64_t>() : 0;
-              std::string handlerArgs = body.at("args").is_string() ? body.at("args").get<std::string>() : "";
+              // 表示中のページが送る任意のメッセージがここに届くため、キーの存在を確認してから読む
+              // （存在確認なしの at() はキー欠けで例外を投げる、wonder-screen-factor Issue #89）。
+              auto callHandlerID = body.contains("_callHandlerID") && body.at("_callHandlerID").is_number_integer() ? body.at("_callHandlerID").get<int64_t>() : 0;
+              std::string handlerArgs = body.contains("args") && body.at("args").is_string() ? body.at("args").get<std::string>() : "";
 
               auto callback = std::make_unique<WebViewChannelDelegate::CallJsHandlerCallback>();
               callback->defaultBehaviour = [this, callHandlerID](const std::optional<const flutter::EncodableValue*> response)
@@ -699,7 +702,7 @@ namespace flutter_inappwebview_plugin
     wil::com_ptr<ICoreWebView2DevToolsProtocolEventReceiver> consoleMessageReceiver;
     if (succeededOrLog(webView->GetDevToolsProtocolEventReceiver(L"Runtime.consoleAPICalled", &consoleMessageReceiver))) {
       failedLog(consoleMessageReceiver->add_DevToolsProtocolEventReceived(
-        Callback<ICoreWebView2DevToolsProtocolEventReceivedEventHandler>(
+        SafeCallback<ICoreWebView2DevToolsProtocolEventReceivedEventHandler>(
           [this](
             ICoreWebView2* sender,
             ICoreWebView2DevToolsProtocolEventReceivedEventArgs* args) -> HRESULT
@@ -742,7 +745,7 @@ namespace flutter_inappwebview_plugin
     }
 
     failedLog(webView->add_NewWindowRequested(
-      Callback<ICoreWebView2NewWindowRequestedEventHandler>(
+      SafeCallback<ICoreWebView2NewWindowRequestedEventHandler>(
         [this](ICoreWebView2* sender, ICoreWebView2NewWindowRequestedEventArgs* args)
         {
           wil::com_ptr<ICoreWebView2Deferral> deferral;
@@ -800,7 +803,7 @@ namespace flutter_inappwebview_plugin
         }
       ).Get(), nullptr));
 
-    failedLog(webView->add_WindowCloseRequested(Callback<ICoreWebView2WindowCloseRequestedEventHandler>(
+    failedLog(webView->add_WindowCloseRequested(SafeCallback<ICoreWebView2WindowCloseRequestedEventHandler>(
       [this](ICoreWebView2* sender, IUnknown* args)
       {
         if (channelDelegate) {
@@ -810,7 +813,7 @@ namespace flutter_inappwebview_plugin
       }
     ).Get(), nullptr));
 
-    failedLog(webView->add_PermissionRequested(Callback<ICoreWebView2PermissionRequestedEventHandler>(
+    failedLog(webView->add_PermissionRequested(SafeCallback<ICoreWebView2PermissionRequestedEventHandler>(
       [this](ICoreWebView2* sender, ICoreWebView2PermissionRequestedEventArgs* args)
       {
         wil::com_ptr<ICoreWebView2Deferral> deferral;
@@ -861,7 +864,7 @@ namespace flutter_inappwebview_plugin
 
     failedLog(webView->AddWebResourceRequestedFilter(L"*", COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL));
     failedLog(webView->add_WebResourceRequested(
-      Callback<ICoreWebView2WebResourceRequestedEventHandler>(
+      SafeCallback<ICoreWebView2WebResourceRequestedEventHandler>(
         [this](
           ICoreWebView2* sender, ICoreWebView2WebResourceRequestedEventArgs* args)
         {
@@ -947,7 +950,7 @@ namespace flutter_inappwebview_plugin
     wil::com_ptr<ICoreWebView2_2> webView2;
     if (SUCCEEDED(webView->QueryInterface(IID_PPV_ARGS(&webView2)))) {
       failedLog(webView2->add_DOMContentLoaded(
-        Callback<ICoreWebView2DOMContentLoadedEventHandler>(
+        SafeCallback<ICoreWebView2DOMContentLoadedEventHandler>(
           [this](ICoreWebView2* sender, ICoreWebView2DOMContentLoadedEventArgs* args)
           {
             if (channelDelegate) {
@@ -962,7 +965,7 @@ namespace flutter_inappwebview_plugin
     wil::com_ptr<ICoreWebView2_14> webView14;
     if (SUCCEEDED(webView->QueryInterface(IID_PPV_ARGS(&webView14)))) {
       failedLog(webView14->add_ServerCertificateErrorDetected(
-        Callback<ICoreWebView2ServerCertificateErrorDetectedEventHandler>(
+        SafeCallback<ICoreWebView2ServerCertificateErrorDetectedEventHandler>(
           [this](ICoreWebView2* sender, ICoreWebView2ServerCertificateErrorDetectedEventArgs* args)
           {
             debugLog("add_ServerCertificateErrorDetected");
@@ -989,7 +992,7 @@ namespace flutter_inappwebview_plugin
     }
 
     failedLog(webViewCompositionController->add_CursorChanged(
-      Callback<ICoreWebView2CursorChangedEventHandler>(
+      SafeCallback<ICoreWebView2CursorChangedEventHandler>(
         [this](ICoreWebView2CompositionController* sender,
           IUnknown* args) -> HRESULT
         {
@@ -1144,7 +1147,7 @@ namespace flutter_inappwebview_plugin
           if (nextIndex >= 0 && nextIndex < size) {
             auto entryId = items->at(nextIndex)->entryId;
             if (entryId.has_value()) {
-              failedAndLog(webView->CallDevToolsProtocolMethod(L"Page.navigateToHistoryEntry", utf8_to_wide("{\"entryId\": " + std::to_string(entryId.value()) + "}").c_str(), Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+              failedAndLog(webView->CallDevToolsProtocolMethod(L"Page.navigateToHistoryEntry", utf8_to_wide("{\"entryId\": " + std::to_string(entryId.value()) + "}").c_str(), SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
                 [this](HRESULT errorCode, LPCWSTR returnObjectAsJson)
                 {
                   failedLog(errorCode);
@@ -1197,7 +1200,7 @@ namespace flutter_inappwebview_plugin
       return;
     }
 
-    failedLog(webView->CallDevToolsProtocolMethod(L"Page.getNavigationHistory", L"{}", Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+    failedLog(webView->CallDevToolsProtocolMethod(L"Page.getNavigationHistory", L"{}", SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
       [completionHandler](HRESULT errorCode, LPCWSTR returnObjectAsJson)
       {
         if (!completionHandler) {
@@ -1259,7 +1262,7 @@ namespace flutter_inappwebview_plugin
           parameters["contextId"] = contextId;
         }
 
-        auto hr = webView->CallDevToolsProtocolMethod(L"Runtime.evaluate", utf8_to_wide(parameters.dump()).c_str(), Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+        auto hr = webView->CallDevToolsProtocolMethod(L"Runtime.evaluate", utf8_to_wide(parameters.dump()).c_str(), SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
           [this, completionHandler](HRESULT errorCode, LPCWSTR returnObjectAsJson)
           {
             nlohmann::json result;
@@ -1326,7 +1329,7 @@ namespace flutter_inappwebview_plugin
           parameters["contextId"] = contextId;
         }
 
-        auto hr = webView->CallDevToolsProtocolMethod(L"Runtime.evaluate", utf8_to_wide(parameters.dump()).c_str(), Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+        auto hr = webView->CallDevToolsProtocolMethod(L"Runtime.evaluate", utf8_to_wide(parameters.dump()).c_str(), SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
           [this, completionHandler](HRESULT errorCode, LPCWSTR returnObjectAsJson)
           {
             nlohmann::json result = {
@@ -1426,7 +1429,7 @@ namespace flutter_inappwebview_plugin
       }
     }
 
-    auto hr = webView->CallDevToolsProtocolMethod(L"Page.captureScreenshot", utf8_to_wide(parameters.dump()).c_str(), Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+    auto hr = webView->CallDevToolsProtocolMethod(L"Page.captureScreenshot", utf8_to_wide(parameters.dump()).c_str(), SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
       [this, completionHandler](HRESULT errorCode, LPCWSTR returnObjectAsJson)
       {
         std::optional<std::string> result = std::nullopt;
@@ -1514,7 +1517,7 @@ namespace flutter_inappwebview_plugin
     auto hr = webView->CallDevToolsProtocolMethod(
       utf8_to_wide(methodName).c_str(),
       !parametersAsJson.has_value() || parametersAsJson.value().empty() ? L"{}" : utf8_to_wide(parametersAsJson.value()).c_str(),
-      Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+      SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
         [completionHandler](HRESULT errorCode, LPCWSTR returnObjectAsJson)
         {
           failedLog(errorCode);
@@ -1540,7 +1543,7 @@ namespace flutter_inappwebview_plugin
     if (succeededOrLog(webView->GetDevToolsProtocolEventReceiver(utf8_to_wide(eventName).c_str(), &eventReceiver))) {
       EventRegistrationToken token = {};
       auto hr = eventReceiver->add_DevToolsProtocolEventReceived(
-        Callback<ICoreWebView2DevToolsProtocolEventReceivedEventHandler>(
+        SafeCallback<ICoreWebView2DevToolsProtocolEventReceivedEventHandler>(
           [this, eventName](
             ICoreWebView2* sender,
             ICoreWebView2DevToolsProtocolEventReceivedEventArgs* args) -> HRESULT
@@ -1577,7 +1580,7 @@ namespace flutter_inappwebview_plugin
   {
     wil::com_ptr<ICoreWebView2_3> webView3;
     if (SUCCEEDED(webView->QueryInterface(IID_PPV_ARGS(&webView3))) && succeededOrLog(webViewController->put_IsVisible(false))) {
-      failedLog(webView3->TrySuspend(Callback<ICoreWebView2TrySuspendCompletedHandler>(
+      failedLog(webView3->TrySuspend(SafeCallback<ICoreWebView2TrySuspendCompletedHandler>(
         [this](HRESULT errorCode, BOOL isSuccessful) -> HRESULT
         {
           failedLog(errorCode);
@@ -1610,7 +1613,7 @@ namespace flutter_inappwebview_plugin
       {"origin", url.value()}
     };
 
-    auto hr = webView->CallDevToolsProtocolMethod(L"Network.getCertificate", utf8_to_wide(parameters.dump()).c_str(), Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+    auto hr = webView->CallDevToolsProtocolMethod(L"Network.getCertificate", utf8_to_wide(parameters.dump()).c_str(), SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
       [this, completionHandler](HRESULT errorCode, LPCWSTR returnObjectAsJson)
       {
         std::optional<std::unique_ptr<SslCertificate>> result = std::nullopt;
