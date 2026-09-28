@@ -1,6 +1,7 @@
 #include <WebView2EnvironmentOptions.h>
 #include <wil/wrl.h>
 
+#include "../utils/callback.h"
 #include "../utils/log.h"
 #include "webview_environment.h"
 
@@ -60,13 +61,13 @@ namespace flutter_inappwebview_plugin
       settings && settings->browserExecutableFolder.has_value() ? utf8_to_wide(settings->browserExecutableFolder.value()).c_str() : nullptr,
       settings && settings->userDataFolder.has_value() ? utf8_to_wide(settings->userDataFolder.value()).c_str() : nullptr,
       options.Get(),
-      Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(
+      SafeCallback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(
         [this, hwnd, completionHandler](HRESULT result, wil::com_ptr<ICoreWebView2Environment> environment) -> HRESULT
         {
           if (succeededOrLog(result)) {
             environment_ = std::move(environment);
 
-            auto hr = environment_->CreateCoreWebView2Controller(hwnd, Callback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(
+            auto hr = environment_->CreateCoreWebView2Controller(hwnd, SafeCallback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(
               [this, completionHandler](HRESULT result, wil::com_ptr<ICoreWebView2Controller> controller) -> HRESULT
               {
                 if (succeededOrLog(result)) {

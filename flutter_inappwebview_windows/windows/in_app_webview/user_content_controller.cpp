@@ -1,6 +1,7 @@
 #include <nlohmann/json.hpp>
 #include <wil/wrl.h>
 
+#include "../utils/callback.h"
 #include "../utils/log.h"
 #include "../utils/string.h"
 #include "../utils/vector.h"
@@ -24,7 +25,7 @@ namespace flutter_inappwebview_plugin
     wil::com_ptr<ICoreWebView2DevToolsProtocolEventReceiver> executionContextCreated;
     if (succeededOrLog(webView_->webView->GetDevToolsProtocolEventReceiver(L"Runtime.executionContextCreated", &executionContextCreated))) {
       auto hr = executionContextCreated->add_DevToolsProtocolEventReceived(
-        Callback<ICoreWebView2DevToolsProtocolEventReceivedEventHandler>(
+        SafeCallback<ICoreWebView2DevToolsProtocolEventReceivedEventHandler>(
           [this](
             ICoreWebView2* sender,
             ICoreWebView2DevToolsProtocolEventReceivedEventArgs* args) -> HRESULT
@@ -59,7 +60,7 @@ namespace flutter_inappwebview_plugin
     wil::com_ptr<ICoreWebView2DevToolsProtocolEventReceiver> executionContextDestroyed;
     if (succeededOrLog(webView_->webView->GetDevToolsProtocolEventReceiver(L"Runtime.executionContextDestroyed ", &executionContextDestroyed))) {
       failedLog(executionContextDestroyed->add_DevToolsProtocolEventReceived(
-        Callback<ICoreWebView2DevToolsProtocolEventReceivedEventHandler>(
+        SafeCallback<ICoreWebView2DevToolsProtocolEventReceivedEventHandler>(
           [this](
             ICoreWebView2* sender,
             ICoreWebView2DevToolsProtocolEventReceivedEventArgs* args) -> HRESULT
@@ -313,7 +314,7 @@ namespace flutter_inappwebview_plugin
         {"frameId", webView_->pageFrameId()},
         {"worldName", worldName}
       };
-      auto hr = webView_->webView->CallDevToolsProtocolMethod(L"Page.createIsolatedWorld", utf8_to_wide(parameters.dump()).c_str(), Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+      auto hr = webView_->webView->CallDevToolsProtocolMethod(L"Page.createIsolatedWorld", utf8_to_wide(parameters.dump()).c_str(), SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
         [this, completionHandler, worldName](HRESULT errorCode, LPCWSTR returnObjectAsJson)
         {
           if (succeededOrLog(errorCode) && completionHandler) {
@@ -357,7 +358,7 @@ namespace flutter_inappwebview_plugin
       parameters["worldName"] = userScript->contentWorld->name;
     }
 
-    auto hr = webView_->webView->CallDevToolsProtocolMethod(L"Page.addScriptToEvaluateOnNewDocument", utf8_to_wide(parameters.dump()).c_str(), Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+    auto hr = webView_->webView->CallDevToolsProtocolMethod(L"Page.addScriptToEvaluateOnNewDocument", utf8_to_wide(parameters.dump()).c_str(), SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
       [userScript, completionHandler](HRESULT errorCode, LPCWSTR returnObjectAsJson)
       {
         if (succeededOrLog(errorCode)) {
@@ -389,7 +390,7 @@ namespace flutter_inappwebview_plugin
       {"identifier", userScript->id}
     };
 
-    auto hr = webView_->webView->CallDevToolsProtocolMethod(L"Page.removeScriptToEvaluateOnNewDocument", utf8_to_wide(parameters.dump()).c_str(), Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
+    auto hr = webView_->webView->CallDevToolsProtocolMethod(L"Page.removeScriptToEvaluateOnNewDocument", utf8_to_wide(parameters.dump()).c_str(), SafeCallback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>(
       [userScript, completionHandler](HRESULT errorCode, LPCWSTR returnObjectAsJson)
       {
         failedLog(errorCode);
