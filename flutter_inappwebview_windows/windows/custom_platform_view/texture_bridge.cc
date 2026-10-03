@@ -106,6 +106,16 @@ namespace flutter_inappwebview_plugin
       closable->Close();
       capture_session_ = nullptr;
     }
+    // The frame pool owns a worker thread, an I/O completion port and shared
+    // D3D surfaces that are only released by an explicit Close(). Releasing the
+    // last COM reference is not enough, so every WebView disposal leaked them.
+    if (frame_pool_) {
+      if (auto closable =
+        frame_pool_.try_as<ABI::Windows::Foundation::IClosable>()) {
+        closable->Close();
+      }
+      frame_pool_ = nullptr;
+    }
   }
 
   void TextureBridge::OnFrameArrived()
